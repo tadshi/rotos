@@ -1,0 +1,6 @@
+target/
+debug/
+*.lock
+.vscode/
+*.o
+*.a
