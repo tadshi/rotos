@@ -1,7 +1,8 @@
 ENTRY(rotos_entry);
 SECTIONS
 {
-    . = 0x80200000;
+    kernel_start = 0xffffffff80000000;
+    . = 0xffffffff80200000;
     .entry : {
         *(.entry)
     }
@@ -20,9 +21,9 @@ SECTIONS
         *(.bss*)
     }
     bss_end = .;
-    kernel_end = .;
     .eh_frame : {
         *(.eh_frame)
     }
+    kernel_end = .;
 }
 

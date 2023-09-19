@@ -1,10 +1,10 @@
 #![no_std]
 #![no_main]
-#![feature(panic_info_message)]
-#![feature(format_args_nl)]
+#![feature(panic_info_message, format_args_nl, strict_provenance)]
 
 mod arch;
 mod kprint;
+mod page;
 
 #[no_mangle]
 pub extern fn main() {
