@@ -1,8 +1,8 @@
 mod sbi;
 use core::fmt::Write;
 use core::fmt::Error;
-use crate::arch::spinlock::SpinLock;
-use crate::page::paddr;
+use crate::arch::atomic::SpinLock;
+use crate::arch::mem::paddr;
 
 static mut KERNEL_CONSOLE: KConsole = KConsole { lock: SpinLock::new()};
 

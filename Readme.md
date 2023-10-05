@@ -8,3 +8,7 @@ and soon get archived.
 The project is a cargo workspace. It may not be a good practice to
 take the whole workspace a repo but anyway this is a toy project.
 
+## Build
+`cargo br` for target qemu-system-riscv64 virt machine.
+
+The project is always test on the newest nightly version of Rust.

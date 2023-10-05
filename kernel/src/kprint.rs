@@ -12,7 +12,7 @@ fn panic(_panic: &PanicInfo<'_>) -> ! {
 // Note: This function is for kernel debug only.
 #[macro_export]
 macro_rules! kprint {
-    ($fmt:expr, $($args:tt)*) => {
+    ($fmt:expr $(, $args:expr)*) => {
         core::fmt::write($crate::arch::kconsole::KConsole::get_console(),
             core::format_args!($fmt, $($args),*)).expect("Kprint failed.");
     };
@@ -21,7 +21,7 @@ macro_rules! kprint {
 // Note: This function is for kernel debug only.
 #[macro_export]
 macro_rules! kprintln {
-    ($fmt:expr, $($args:tt)*) => {
+    ($fmt:expr $(,$args:expr)*) => {
         core::fmt::write($crate::arch::kconsole::KConsole::get_console(),
             core::format_args_nl!($fmt, $($args),*)).expect("Kprintln failed.");
     };

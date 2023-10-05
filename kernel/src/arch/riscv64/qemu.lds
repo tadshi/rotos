@@ -14,11 +14,11 @@ SECTIONS
         *(.rodata*)
     }
     .data : {
-        *(.data*)
+        *(.data* .sdata*)
     }
     bss_start = .;
     .bss : {
-        *(.bss*)
+        *(.bss* .sbss*)
     }
     bss_end = .;
     .eh_frame : {
@@ -26,4 +26,3 @@ SECTIONS
     }
     kernel_end = .;
 }
-
