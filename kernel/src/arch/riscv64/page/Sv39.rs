@@ -1,0 +1,20 @@
+pub const VALID_BIT:  u64 = 0x1;
+pub const READ_BIT: u64 = 0x2;
+pub const WRITE_BIT: u64 = 0x4;
+pub const EXEC_BIT: u64 = 0x8;
+pub const USER_BIT: u64 = 0x10;
+pub const GLOBAL_BIT: u64 = 0x20;
+pub const ACCESSED_BIT: u64 = 0x40;
+pub const DIRTY_BIT: u64 = 0x80;
+pub const XWR_MASK: u64 = READ_BIT | WRITE_BIT | EXEC_BIT;
+
+pub const PAGE_SHIFT: usize = 12;
+pub const VPN_0_SHIFT: usize = PAGE_SHIFT;
+pub const VPN_1_SHIFT: usize = PAGE_SHIFT + 9;
+pub const VPN_2_SHIFT: usize = PAGE_SHIFT + 18;
+pub const VPN_0_MASK: u64 = 0x1ff << VPN_0_SHIFT;
+pub const VPN_1_MASK: u64 = 0x1ff << VPN_1_SHIFT;
+pub const VPN_2_MASK: u64 = 0x1ff << VPN_2_SHIFT;
+pub const PPN_MASK: u64 = 0x003ffffffffffc00;
+pub const PPN_SHIFT: usize = 10;
+pub const PAGE_MASK: u64 = PPN_MASK << (PAGE_SHIFT - PPN_SHIFT);

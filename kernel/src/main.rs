@@ -7,7 +7,7 @@
 use core::ptr::{addr_of, addr_of_mut};
 
 mod arch;
-mod kprint;
+mod config;
 mod kserver;
 mod utils;
 

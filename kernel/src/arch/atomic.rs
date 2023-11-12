@@ -1,4 +1,4 @@
-use core::sync::atomic::{AtomicBool, Ordering, AtomicU32};
+use core::{sync::atomic::{AtomicBool, Ordering, AtomicU32}, cell::UnsafeCell};
 
 pub struct SpinLock {
     lock: AtomicBool
@@ -64,20 +64,20 @@ impl MRSWLock {
 
 pub struct RWLock<T> {
     lock: MRSWLock,
-    content: T
+    content: UnsafeCell<T>
 }
 
 impl<T> RWLock<T> {
     pub fn new(content: T) -> Self {
         RWLock {
             lock: MRSWLock::new(),
-            content
+            content: UnsafeCell::new(content)
         }
     }
 
     pub fn start_read_context(&self) -> &T {
         self.lock.reader_lock();
-        &self.content
+        unsafe {self.content.get().as_ref().unwrap()}
     }
 
     pub fn end_read_context(&self) {
@@ -86,7 +86,7 @@ impl<T> RWLock<T> {
 
     pub fn start_write_context(&mut self) -> &mut T{
         self.lock.writer_lock();
-        &mut self.content
+        self.content.get_mut()
     }
 
     pub fn end_write_context(&self) {

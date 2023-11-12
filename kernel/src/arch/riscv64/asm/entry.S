@@ -30,6 +30,17 @@ rotos_entry:
     c.nop
 
 .data
+.subsection 0
+exp_handler:
+nop // Sync_interrupt
+nop // Supervisor soft interrupt
+.skip 12
+nop // Timer interrupt
+.skip 12
+nop // Supervisor externel interrupt
+.skip 4*54
+
+.subsection 1
 .p2align 12
 l1_page_table:
 .quad 0x000000000000002f
@@ -41,5 +52,7 @@ l1_page_table:
 .quad 0x000000001000002f
 .quad 0x000000002000002f
 .quad 0x000000003000002f
+
+.subsection 2
 .skip 4096
 kernel_stack:

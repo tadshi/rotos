@@ -3,18 +3,27 @@ use core::mem::MaybeUninit;
 use crate::arch::atomic::RWLock;
 use page::PageManager;
 
+use self::process::ProcessManager;
+
 mod page;
+mod process;
 pub enum KServerType {
-    PageServer
+    PageServer,
+    ProcessServer
 }
 
 
 pub enum KServerWrapper<'a> {
-    Page(&'a PageManager)
+    Page(&'a RWLock<PageManager>),
+    Process(&'a RWLock<ProcessManager>)
 }
 
+// Be careful of deadlock!
+// No cyclic use of server should be allowed. Take with care!
+// Can we do this?
 pub struct KServerManager {
-    page_server: PageManager
+    page_server: RWLock<PageManager>,
+    process_server: RWLock<ProcessManager>
 }
 
 static mut SERVER_MANAGER: MaybeUninit<KServerManager> = MaybeUninit::<KServerManager>::uninit();
@@ -24,7 +33,8 @@ impl<'a> KServerManager {
         unsafe {
             SERVER_MANAGER.write(
                 KServerManager {
-                    page_server: PageManager::init_page().unwrap()
+                    page_server: RWLock::new(PageManager::init().unwrap()),
+                    process_server: RWLock::new(ProcessManager::init().unwrap())
             });
         }
     }
@@ -35,11 +45,28 @@ impl<'a> KServerManager {
         }
     }
 
-    pub fn get_server(&'a self, req: KServerType) -> RWLock<KServerWrapper<'a>> {
+    #[deprecated]
+    pub fn get_server(&self, req: KServerType) -> KServerWrapper {
         match req {
-            KServerType::PageServer => RWLock::new(KServerWrapper::<'a>::Page(&self.page_server))
+            KServerType::PageServer => KServerWrapper::Page(&self.page_server),
+            KServerType::ProcessServer => KServerWrapper::Process(&self.process_server)
         }
     }
+
+    pub fn with_page<F, T>(operation: F) -> T where F: Fn(&PageManager) -> T {
+        let server = &KServerManager::get_manager().page_server;
+        let ret = operation(server.start_read_context());
+        server.end_read_context();
+        ret
+    }
+
+    pub fn with_page_mut<F, T>(operation: F) -> T where F: Fn(&mut PageManager) -> T {
+        let server = &mut KServerManager::get_manager().page_server;
+        let ret = operation(server.start_write_context());
+        server.end_write_context();
+        ret
+    }
+
 }
 
 // It may seems promising to define kernel servers as traits
