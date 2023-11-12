@@ -5,3 +5,6 @@ debug/
 *.o
 *.a
 *.dump
+*.dtb
+*.dts
+kernel/src/config/*.rs

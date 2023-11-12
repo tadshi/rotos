@@ -1,5 +1,5 @@
 targets = riscv64
-.PHONY : $(targets) clean
+.PHONY : $(targets) config clean
 
 $(targets) :
 	$(MAKE) -C ./src/arch/$@/asm
