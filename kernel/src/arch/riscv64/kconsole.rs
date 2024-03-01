@@ -1,6 +1,7 @@
 mod sbi;
 use core::fmt::Write;
 use core::fmt::Error;
+use core::ptr::addr_of_mut;
 use crate::arch::atomic::SpinLock;
 use crate::arch::mem::paddr;
 
@@ -11,9 +12,9 @@ pub struct KConsole {
 }
 
 impl KConsole {
-    pub fn get_console() -> &'static mut KConsole {
+    pub fn get_console<'a>() -> &'a mut KConsole {
         unsafe {
-            &mut KERNEL_CONSOLE
+            &mut *addr_of_mut!(KERNEL_CONSOLE)
         }
     }
 }

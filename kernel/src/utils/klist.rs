@@ -27,7 +27,7 @@ impl<T> KLinkedList<T> {
         }
     }
 
-    pub fn from_prepared(data_arr:&'static mut [T], wrap_arr: &'static mut [MaybeUninit<KListElement<T>>], start:usize, end: usize) -> KLinkedList<T> {
+    pub fn from_prepared(data_arr:*mut [T], wrap_arr: *mut [MaybeUninit<KListElement<T>>], start:usize, end: usize) -> KLinkedList<T> {
         unsafe {
             let end = end - 1;
             let data_ptr = data_arr.as_mut_ptr();
@@ -38,7 +38,7 @@ impl<T> KLinkedList<T> {
             }
             KLinkedList {
                 head: Some(NonNull::from((*wrap_ptr.add(start)).assume_init_mut())),
-                tail: Some(NonNull::from(wrap_arr[end].assume_init_mut())), 
+                tail: Some(NonNull::from((*wrap_ptr.add(end)).assume_init_mut())), 
             }   
         }
     }
@@ -168,7 +168,10 @@ macro_rules! prepare_k_list {
 macro_rules! from_prepared {
     ($id:ident, $start:expr, $end:expr) => {
         paste::paste! {
-            crate::utils::klist::KLinkedList::from_prepared(&mut [<$id _ELEM>], &mut [<$id _NODES>], $start, $end)
+            crate::utils::klist::KLinkedList::from_prepared(
+                core::ptr::addr_of_mut!([<$id _ELEM>]), 
+                core::ptr::addr_of_mut!([<$id _NODES>]),
+                $start, $end)
         }
     };
 }
