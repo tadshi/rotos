@@ -9,3 +9,6 @@ links = "entry"
 
 [dependencies]
 paste = "1.0"
+
+[build_dependencies]
+toml = "0.8"

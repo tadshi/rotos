@@ -1,7 +1,7 @@
 use crate::{from_prepared, kprintln, k_list_eforeach};
 use crate::utils::{klist::KLinkedList, kerror::KError};
 use crate::{arch::interrupt::RegisterEnv, utils::Bss, prepare_k_list};
-use crate::config::MAX_PROCESS;
+use crate::config::limit::MAX_PROCESS;
 
 use super::{KServerWrapper, KServerManager};
 pub struct ProcessInfo {

@@ -1,10 +1,13 @@
 targets = riscv64
 .PHONY : $(targets) config clean
 
+OUTPUT_DIR = $(CURDIR)/lib
+
 $(targets) :
-	$(MAKE) -C ./src/arch/$@/asm
+	mkdir -p $(OUTPUT_DIR)/$@
+	$(MAKE) -C ./src/arch/$@/asm OUTPUT_DIR=$(OUTPUT_DIR)/$@
 
 clean :
 	for target in $(targets); do \
-		$(MAKE) -C ./src/arch/$$target/asm clean; \
+		rm -rf $(OUTPUT_DIR)/$$target; \
 	done
