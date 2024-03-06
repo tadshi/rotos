@@ -1,9 +1,9 @@
-use std::{env, fmt::write, fs::{self, File}, io::Write, process::Command, string};
+use std::{env, fs::{self, File}, io::Write, path::Path, process::Command};
 use core::panic;
 use toml::Table;
 
 fn main() {
-    let arch = env::var("CARGO_CFG_TARGET_ARCH").expect("Fail to read arch");
+    let arch: String = env::var("CARGO_CFG_TARGET_ARCH").expect("Fail to read arch");
     println!("cargo:rustc-link-search=native=kernel/lib/{}", &arch);
     println!("cargo:rustc-link-lib=entry");
     if arch == "riscv64" {
@@ -16,6 +16,13 @@ fn main() {
         panic!("Makefile failed.")
     }
     make_config();
+    let flags = env::var("CARGO_ENCODED_RUSTFLAGS")
+                        .expect("Fail to read Cargo-set flags");
+    for flag in flags.split('\x1f') {
+        if flag.starts_with("device=") {
+            make_device_info(&arch, &flag[8..flag.len() - 1])
+        }
+    }
     // print_cargo_env()
 }
 
@@ -29,18 +36,45 @@ fn make_config() {
         let config_file = file_res.unwrap();
         let filename = config_file.file_name().into_string().expect("Cannot parse config file name");
         write!(config_rs, "pub mod {} {{\n", &filename[..filename.len() - 5]).expect("Fail to write config file.");
-        let config = fs::read_to_string(config_file.path()).expect("Cannot read config file.")
-                                .parse::<Table>().expect("Fail to parse config file.");
-        for (key, value) in config {
-            match value {
-                toml::Value::String(string) => write!(config_rs, "    pub const {}:str = \"{}\";\n", key, string),
-                toml::Value::Integer(int64) => write!(config_rs, "    pub const {}:usize = {};\n", key, int64 as usize),
-                toml::Value::Boolean(bool) => write!(config_rs, "    pub const {}:bool = {};\n", key, bool),
-                _ => panic!("Type {:?} not supported for config file.", value)
-            }.expect("Fail to write config file.");
-        }
+        toml_to_rust(&config_file.path(), &mut config_rs, 4);
         config_rs.write(b"}\n").expect("Fail to write config file.");
     }
+}
+
+fn make_device_info(arch: &str, device_name: &str) {
+    println!("{}:{}", arch, device_name);
+    let device_desp_path = format!("src/arch/{}/device/{}.toml", arch, device_name);
+    let mut rust_output = File::create("src/arch/device.rs").expect("Fail to creat device rust file");
+    toml_to_rust(&device_desp_path, &mut rust_output, 0);
+    let mut header_output = File::create("src/arch/device.h").expect("Fail to create device header file");
+    toml_to_header(&device_desp_path, &mut header_output);
+}
+
+fn toml_to_rust(toml_path: &dyn AsRef<Path>, output: &mut dyn Write, ident:usize) {
+    let config = fs::read_to_string(toml_path).expect("Cannot read toml file.")
+            .parse::<Table>().expect("Fail to parse toml file.");
+    for (key, value) in config {
+        match value {
+        toml::Value::String(string) => write!(output, "{}pub const {}:str = \"{}\";\n", " ".repeat(ident), key, string),
+        toml::Value::Integer(int64) => write!(output, "{}pub const {}:usize = {};\n", " ".repeat(ident), key, int64 as usize),
+        toml::Value::Boolean(bool) => write!(output, "{}pub const {}:bool = {};\n", " ".repeat(ident), key, bool),
+        _ => panic!("Type {:?} not supported for toml to rust.", value)
+        }.expect("Fail to write output rust file.");
+    }
+}
+
+fn toml_to_header(toml_path: &dyn AsRef<Path>, output: &mut dyn Write) {
+    let config = fs::read_to_string(toml_path).expect("Cannot read toml file.")
+            .parse::<Table>().expect("Fail to parse toml file.");
+    for (key, value) in config {
+        match value {
+        toml::Value::String(string) => write!(output, "#define {} {}\n", key, string),
+        toml::Value::Integer(int64) => write!(output, "#define {} {}\n", key, int64),
+        toml::Value::Boolean(bool) => write!(output, "#define {} {}\n", key, bool),
+        _ => panic!("Type {:?} not supported for toml to header.", value)
+        }.expect("Fail to write output header file.");
+    }
+    
 }
 
 // fn print_cargo_env() {
