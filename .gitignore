@@ -8,3 +8,4 @@ debug/
 *.dtb
 *.dts
 kernel/src/config/*.rs
+kernel/src/arch/device*

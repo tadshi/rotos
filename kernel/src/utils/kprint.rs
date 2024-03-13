@@ -1,4 +1,5 @@
 use core::fmt::write;
+use core::ffi::{c_char, CStr};
 use core::panic::PanicInfo;
 use crate::arch::kconsole::KConsole;
 
@@ -25,4 +26,11 @@ macro_rules! kprintln {
         core::fmt::write($crate::arch::kconsole::KConsole::get_console(),
             core::format_args_nl!($fmt, $($args),*)).expect("Kprintln failed.");
     };
+}
+
+#[no_mangle]
+extern "C" fn kcputs(c_str: *const c_char) {
+    unsafe {
+        kprint!("{:?}", CStr::from_ptr(c_str));
+    }
 }

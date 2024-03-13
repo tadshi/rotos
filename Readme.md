@@ -9,6 +9,8 @@ The project is a cargo workspace. It may not be a good practice to
 take the whole workspace a repo but anyway this is a toy project.
 
 ## Build
-`cargo br` for target qemu-system-riscv64 virt machine.
+The build system is suffering from great change and is unstable now.
+
+This will be kept undocumented until some final decision is made.
 
 The project is always test on the newest nightly version of Rust.

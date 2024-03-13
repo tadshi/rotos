@@ -6,8 +6,10 @@ SECTIONS
     .entry : {
         *(.entry)
     }
+    .trap : {
+        *(.trap)
+    }
     .text : {
-        *(.entry)
         *(.text .text.*)
     }
     .rodata : {
