@@ -1,9 +1,5 @@
 [alias]
-ba = "build --target=armv7a-none-eabi"
-br = "build --target=riscv64gc-unknown-none-elf"
+brq = "build --target=riscv64gc-unknown-none-elf --config env.DEVICE=\"qemu\""
 
 [build]
 target="riscv64gc-unknown-none-elf"
-
-[target.riscv64gc-unknown-none-elf]
-rustflags = ["-C", "link-arg=-Tkernel/src/arch/riscv64/qemu.lds", "--cfg", "page=\"Sv39\"", "--cfg", "device=\"qemu\""]

@@ -1,13 +1,23 @@
-targets = riscv64
-.PHONY : $(targets) config clean
+.PHONY: asm device clean
 
-OUTPUT_DIR = $(CURDIR)/lib
+LIB_DIR = $(CURDIR)/lib
+DEVICE_DIR = $(CURDIR)/device
 
-$(targets) :
-	mkdir -p $(OUTPUT_DIR)/$@
-	$(MAKE) -C ./src/arch/$@/asm OUTPUT_DIR=$(OUTPUT_DIR)/$@
+CARGO_CLEAN_MARKER = $(OUT_DIR)/.cargo_clean.marker
 
-clean :
-	for target in $(targets); do \
-		rm -rf $(OUTPUT_DIR)/$$target; \
-	done
+all: asm
+
+asm: $(CARGO_CLEAN_MARKER) device
+	mkdir -p $(LIB_DIR)/$(ARCH)
+	$(MAKE) -C $(LIB_DIR) ARCH=$(ARCH) DEVICE_DIR=$(DEVICE_DIR)
+
+device:
+	$(MAKE) -C $(DEVICE_DIR) ARCH=$(ARCH) DEVICE=$(DEVICE)
+
+clean:
+	$(MAKE) clean -C $(LIB_DIR)
+	$(MAKE) clean -C $(DEVICE_DIR)
+
+$(CARGO_CLEAN_MARKER):
+	$(MAKE) clean;
+	echo "Makefile stub file" > $(CARGO_CLEAN_MARKER)

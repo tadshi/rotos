@@ -7,5 +7,7 @@ debug/
 *.dump
 *.dtb
 *.dts
-kernel/src/config/*.rs
-kernel/src/arch/device*
+*.mark
+kernel/device/device.h
+kernel/lib/*
+!makefile

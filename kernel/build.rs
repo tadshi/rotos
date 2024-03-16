@@ -4,84 +4,71 @@ use toml::Table;
 
 fn main() {
     let arch: String = env::var("CARGO_CFG_TARGET_ARCH").expect("Fail to read arch");
-    println!("cargo:rustc-link-search=native=kernel/lib/{}", &arch);
-    println!("cargo:rustc-link-lib=entry");
-    if arch == "riscv64" {
-        println!("cargo:rerun-if-changed=src/arch/riscv64/asm/");
-    }
+    println!("cargo:rustc-link-search=native=kernel/lib/");
+    println!("cargo:rustc-link-lib=asm");
+    println!("cargo:rerun-if-changed=src/arch/{}/asm/", &arch);
     println!("cargo:rerun-if-changed=src/config/toml/");
-    let status = Command::new("make").arg(&arch)
-                                        .status().expect("Fail to make kernel.");
-    if !status.success() {
-        panic!("Makefile failed.")
-    }
+    println!("cargo:rerun-if-env-changed=DEVICE");
     make_config();
-    let flags = env::var("CARGO_ENCODED_RUSTFLAGS")
-                        .expect("Fail to read Cargo-set flags");
-    for flag in flags.split('\x1f') {
-        if flag.starts_with("device=") {
-            make_device_info(&arch, &flag[8..flag.len() - 1])
-        }
+    let device = env::var("DEVICE").expect("Fail to get target device.");
+    parse_device_info(&arch, &device);
+    println!("cargo:rustc-link-arg-bins=-Tkernel/src/arch/{}/{}.lds", &arch, &device);
+    let status = Command::new("make").arg(format!("ARCH={}", &arch))
+                                        .arg(format!("DEVICE={}", &device))
+                                        .arg(format!("OUT_DIR={}", env::var_os("OUT_DIR").unwrap()
+                                            .into_string().expect("Invalid target dir.")))
+                                        .status().expect("Fail to invoke makefile.");
+    if !status.success() {
+        panic!("Fail to compile assembly files.")
     }
-    // print_cargo_env()
 }
 
 fn make_config() {
-    let mut config_rs = File::create("src/config/mod.rs").expect("Cannot create config rust file.");
-    let config_dir = fs::read_dir("src/config/toml").expect("Cannot read config dir.");
-    for file_res in config_dir {
+    let out_dir = env::var_os("OUT_DIR").unwrap();
+    let config_out_path =  Path::new(&out_dir).join("config.rs");
+    let mut config_rs = File::create(config_out_path).expect("Cannot create config rust file.");
+    let config_input_dir = fs::read_dir("config/").expect("Cannot read config dir.");
+    for file_res in config_input_dir {
         if file_res.is_err() {
             continue;
         }
         let config_file = file_res.unwrap();
         let filename = config_file.file_name().into_string().expect("Cannot parse config file name");
+        if !filename.ends_with(".toml") {
+            continue;
+        }
         write!(config_rs, "pub mod {} {{\n", &filename[..filename.len() - 5]).expect("Fail to write config file.");
-        toml_to_rust(&config_file.path(), &mut config_rs, 4);
+        let config_table = fs::read_to_string(&config_file.path()).expect("Cannot read toml file.")
+                .parse::<Table>().expect("Fail to parse toml file.");
+        toml_to_rust(&config_table, &mut config_rs, 4);
         config_rs.write(b"}\n").expect("Fail to write config file.");
     }
 }
 
-fn make_device_info(arch: &str, device_name: &str) {
-    println!("{}:{}", arch, device_name);
-    let device_desp_path = format!("src/arch/{}/device/{}.toml", arch, device_name);
-    let mut rust_output = File::create("src/arch/device.rs").expect("Fail to creat device rust file");
-    toml_to_rust(&device_desp_path, &mut rust_output, 0);
-    let mut header_output = File::create("src/arch/device.h").expect("Fail to create device header file");
-    toml_to_header(&device_desp_path, &mut header_output);
+fn parse_device_info(arch: &str, device_name: &str) {
+    let out_dir = env::var_os("OUT_DIR").unwrap();
+    let device_out_path =  Path::new(&out_dir).join("device.rs");
+    let device_desp_path = format!("device/{}/{}.toml", arch, device_name);
+    let mut rust_output = File::create(device_out_path).expect("Fail to creat device rust file");
+    let device_table = fs::read_to_string(device_desp_path).expect("Cannot read toml file.")
+            .parse::<Table>().expect("Fail to parse toml file.");
+    toml_to_rust(device_table["parameters"].as_table().unwrap(), &mut rust_output, 0);
+    for (key, value) in device_table["features"].as_table().unwrap() {
+        match value {
+            toml::Value::String(string) => println!("cargo:rustc-cfg={}=\"{}\"", key, string),
+            toml::Value::Boolean(bool) => if *bool { println!("cargo:rustc-cfg={}", key) },
+            _ => panic!("Type {:?} not supported for features.", value)
+        }
+    }
 }
 
-fn toml_to_rust(toml_path: &dyn AsRef<Path>, output: &mut dyn Write, ident:usize) {
-    let config = fs::read_to_string(toml_path).expect("Cannot read toml file.")
-            .parse::<Table>().expect("Fail to parse toml file.");
-    for (key, value) in config {
+fn toml_to_rust(table: &toml::Table, output: &mut dyn Write, ident:usize) {
+    for (key, value) in table {
         match value {
         toml::Value::String(string) => write!(output, "{}pub const {}:str = \"{}\";\n", " ".repeat(ident), key, string),
-        toml::Value::Integer(int64) => write!(output, "{}pub const {}:usize = {};\n", " ".repeat(ident), key, int64 as usize),
+        toml::Value::Integer(int64) => write!(output, "{}pub const {}:usize = {};\n", " ".repeat(ident), key, *int64 as usize),
         toml::Value::Boolean(bool) => write!(output, "{}pub const {}:bool = {};\n", " ".repeat(ident), key, bool),
         _ => panic!("Type {:?} not supported for toml to rust.", value)
         }.expect("Fail to write output rust file.");
     }
 }
-
-fn toml_to_header(toml_path: &dyn AsRef<Path>, output: &mut dyn Write) {
-    let config = fs::read_to_string(toml_path).expect("Cannot read toml file.")
-            .parse::<Table>().expect("Fail to parse toml file.");
-    for (key, value) in config {
-        match value {
-        toml::Value::String(string) => write!(output, "#define {} {}\n", key, string),
-        toml::Value::Integer(int64) => write!(output, "#define {} {}\n", key, int64),
-        toml::Value::Boolean(bool) => write!(output, "#define {} {}\n", key, bool),
-        _ => panic!("Type {:?} not supported for toml to header.", value)
-        }.expect("Fail to write output header file.");
-    }
-    
-}
-
-// fn print_cargo_env() {
-//     for (key, value) in env::vars() {
-//         if key.starts_with("CARGO_CFG_") {
-//             println!("{}: {:?}", key, value);
-//         }
-//     }
-//     panic!("!!")
-// }

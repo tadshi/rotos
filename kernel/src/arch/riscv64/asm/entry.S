@@ -1,4 +1,4 @@
-#include "../../device.h"
+#include "device.h"
 .section .entry, "ax"
 .globl rotos_entry
 rotos_entry:
