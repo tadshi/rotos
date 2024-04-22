@@ -12,15 +12,15 @@ impl SpinLock {
     }
 
     pub fn try_lock(&self) -> bool {
-        self.lock.compare_exchange(false, true, Ordering::AcqRel, Ordering::Relaxed).is_ok()
+        self.lock.compare_exchange(false, true, Ordering::AcqRel, Ordering::Acquire).is_ok()
     }
 
     pub fn lock(&self) {
-        while self.lock.compare_exchange_weak(false, true, Ordering::AcqRel, Ordering::Relaxed).is_err() {}
+        while self.lock.compare_exchange_weak(false, true, Ordering::AcqRel, Ordering::Acquire).is_err() {}
     }
 
     pub fn unlock(&self) {
-        while self.lock.compare_exchange_weak(true, false, Ordering::AcqRel, Ordering::Relaxed).is_err() {}
+        self.lock.store(false, Ordering::Relaxed);
     }
 }
 
