@@ -3,7 +3,7 @@ use crate::utils::{klist::KLinkedList, kerror::KError};
 use crate::{arch::interrupt::RegisterEnv, utils::Bss, prepare_k_list};
 use crate::config::limit::MAX_PROCESS;
 
-use super::{KServerWrapper, KServerManager};
+use super::{KServerManager, Process};
 pub struct ProcessInfo {
     pid: u32,
     pgid: u32,
@@ -49,3 +49,6 @@ impl ProcessManager {
     }
 }
 
+impl Process for ProcessManager {
+
+}

@@ -8,7 +8,9 @@ links = "entry"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+elf = { version = "0.7", default-features = false }
 paste = "1.0"
+static_assertions = "1.1.0"
 
 [build_dependencies]
 toml = "0.8"

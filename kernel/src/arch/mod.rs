@@ -6,8 +6,8 @@ pub mod kconsole;
 pub mod mem;
 #[cfg_attr(target_arch = "riscv64", path = "riscv64/interrupt.rs")]
 pub mod interrupt;
-#[cfg_attr(target_arch = "riscv64", path = "riscv64/page/mod.rs")]
-pub mod page;
+#[cfg_attr(target_arch = "riscv64", path = "riscv64/mmu/mod.rs")]
+pub mod mmu;
 #[cfg_attr(target_arch = "riscv64", path = "riscv64/power.rs")]
 pub mod power;
 #[cfg(target_arch = "riscv64")]

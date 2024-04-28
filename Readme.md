@@ -8,9 +8,15 @@ and soon get archived.
 The project is a cargo workspace. It may not be a good practice to
 take the whole workspace a repo but anyway this is a toy project.
 
+Basically this project tend to be a micro-kernel OS with high flexibility, fast and robust ITC
+and new technologies. But after all, this is a toy project.
+
 ## Build
-The build system is suffering from great change and is unstable now.
+`cargo brq` to build the OS for a riscv64 qemu target.
 
-This will be kept undocumented until some final decision is made.
+The project ought to always compile on the newest nightly version of Rust.
 
-The project is always test on the newest nightly version of Rust.
+## Run
+The OS is typically test on a 4-hart qemu virtual machine. It runs under S-mode and use SBI.
+
+A port towards other platform should be easy, even though it is not supported yet.

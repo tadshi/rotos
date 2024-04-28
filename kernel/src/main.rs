@@ -3,6 +3,8 @@
 #![feature(panic_info_message, format_args_nl, strict_provenance, exposed_provenance, never_type)]
 #![feature(ptr_sub_ptr, maybe_uninit_uninit_array, const_mut_refs, slice_ptr_get)]
 #![feature(const_maybe_uninit_uninit_array)]
+#[macro_use]
+extern crate static_assertions;
 
 use core::{arch::asm, ptr::{addr_of, addr_of_mut}};
 
