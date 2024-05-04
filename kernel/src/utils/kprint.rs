@@ -24,7 +24,7 @@ macro_rules! kprint {
 macro_rules! kprintln {
     ($fmt:expr $(,$args:expr)*) => {
         core::fmt::write($crate::arch::kconsole::KConsole::get_console(),
-            core::format_args_nl!($fmt, $($args),*)).expect("Kprintln failed.");
+            core::format_args_nl!($fmt, $($args),*)).expect("Kprintln failed.")
     };
 }
 

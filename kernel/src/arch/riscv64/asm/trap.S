@@ -134,16 +134,24 @@ unknown_fault_handler:
     li t1, 0x206e776f
     li t2, 0x6c756166
     li t3, 0x78302074
-    lui t4, 0x636f0
-    srli t6, a0, 8
+    li t4, 0x00000039
+    srli t6, a0, 4
     addi t5, t6, 48
-    slli t6, t6, 8
+    bge t4, t5, unknown_fault_handler_1
+    addi t5, t5, 7
+unknown_fault_handler_1:
+    slli t6, t6, 4
     sub t6, a0, t6
     addi t6, t6, 48
+    bge t4, t6, unknown_fault_handler_2
+    addi t6, t6, 7
+unknown_fault_handler_2:
+    slli t6, t6, 8
     add t5, t5, t6
+    lui t4, 0x6f200
     add t4, t4, t5
-    li t5, 0x65727563
-    li t6, 0x002e64
+    li t5, 0x72756363
+    li t6, 0x002e6465
     c.swsp t0, 0(sp)
     c.swsp t1, 4(sp)
     c.swsp t2, 8(sp)
