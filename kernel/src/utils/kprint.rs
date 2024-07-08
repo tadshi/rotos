@@ -1,11 +1,11 @@
-use core::fmt::write;
+use core::fmt::Write;
 use core::ffi::{c_char, CStr};
 use core::panic::PanicInfo;
 use crate::arch::kconsole::KConsole;
 
 #[panic_handler]
 fn panic(_panic: &PanicInfo<'_>) -> ! {
-    let _ = write(KConsole::get_console(), *_panic.message().unwrap());
+    let _ = write!(KConsole::get_console(), "[KPANIC]{}", _panic.message());
     loop{
     }
 }
