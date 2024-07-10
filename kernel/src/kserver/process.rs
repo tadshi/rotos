@@ -3,7 +3,7 @@ use crate::utils::{klist::KLinkedList, kerror::KError};
 use crate::{arch::interrupt::RegisterEnv, utils::Bss, prepare_k_list};
 use crate::config::limit::MAX_PROCESS;
 
-use super::{KServerManager, Process};
+use super::{KServerManager, ProcessTrait};
 pub struct ProcessInfo {
     pid: u32,
     pgid: u32,
@@ -30,7 +30,11 @@ pub struct ProcessManager {
 }
 
 impl ProcessManager {
-    pub fn init() -> Result<ProcessManager, &'static str> {
+}
+
+impl ProcessTrait for ProcessManager {
+    type PCB = ProcessInfo;
+    fn init() -> Result<ProcessManager, &'static str> {
         unsafe {
             let ret = from_prepared!(PROCESS_LIST, 0, MAX_PROCESS);
             k_list_eforeach!(PROCESS_LIST, |(idx, pinfo)| {pinfo.pid = idx as u32});
@@ -39,7 +43,7 @@ impl ProcessManager {
         }
     }
 
-    pub fn new_process(&mut self) -> Result<&mut ProcessInfo, KError> {
+    fn new_process(&mut self) -> Result<&mut ProcessInfo, KError> {
         let pde = KServerManager::with_page_mut(|page_server| {
             page_server.alloc_ppage()
         })?;
@@ -47,8 +51,4 @@ impl ProcessManager {
         pinfo.pde_paddr = pde;
         Ok(pinfo)
     }
-}
-
-impl Process for ProcessManager {
-
 }

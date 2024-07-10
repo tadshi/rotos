@@ -5,7 +5,7 @@ use crate::{arch::mem::*, kprintln, prepare_k_list, utils::Bss, k_list_eforeach,
 use crate::utils::klist::KLinkedList;
 use crate::arch::mmu::PageType;
 
-use super::Memory;
+use super::MemoryTrait;
 
 pub trait PageSystem {
     const PAGE_SHIFT: usize;
@@ -37,7 +37,17 @@ pub struct PageManager {
 }
 
 impl PageManager {
-    pub(super) fn init() -> Result<PageManager, &'static str> {
+    pub fn alloc_ppage(&mut self) ->Result<usize, KError> {
+        let page = self.free.pop_front().ok_or(KError::NotEnoughPage)?;
+        page.get().used_count = 1;
+        let ret = page.get().paddr;
+        self.used.push_front(page);
+        Ok(ret)
+    }
+}
+
+impl MemoryTrait for PageManager {
+    fn init() -> Result<PageManager, &'static str> {
         unsafe{
             let kernel_end_addr = addr_of!(kernel_end).addr();
             let mut first_user_ppn = kernel_end_addr >> PageType::PAGE_SHIFT;
@@ -55,16 +65,4 @@ impl PageManager {
             Ok(ret)
         }
     }
-
-    pub fn alloc_ppage(&mut self) ->Result<usize, KError> {
-        let page = self.free.pop_front().ok_or(KError::NotEnoughPage)?;
-        page.get().used_count = 1;
-        let ret = page.get().paddr;
-        self.used.push_front(page);
-        Ok(ret)
-    }
-}
-
-impl Memory for PageManager {
-    
 }
